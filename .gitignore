@@ -1,0 +1,12 @@
+src/*.o
+src/*.mod
+src/main
+src/fort.*
+src1/*.o
+src1/*.mod
+src1/main
+src1/fort.*
+src2/*.o
+src2/*.mod
+src2/main
+src2/fort.*
