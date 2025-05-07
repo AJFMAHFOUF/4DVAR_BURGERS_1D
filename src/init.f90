@@ -106,7 +106,7 @@ subroutine init
  call fft_d(eta,eta_m)
  
  do m=-mm,mm
-   eta_m(m) = eta_m(m)*sqrt(correl(m))
+   eta_m(m) = eta_m(m)*sqrt(c1*correl(m))
  enddo
  
  u5_m(:) = ut_m(:) + eta_m(:)  
