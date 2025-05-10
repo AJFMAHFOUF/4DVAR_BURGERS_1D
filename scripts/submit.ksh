@@ -11,3 +11,4 @@ main
 mv fort.173 ../data/cost_function_gradient_${EXPID}.dat
 mv fort.170 ../data/output_24h_${EXPID}.dat
 mv fort.171 ../data/output_48h_${EXPID}.dat
+mv fort.172 ../data/output_00h_${EXPID}.dat

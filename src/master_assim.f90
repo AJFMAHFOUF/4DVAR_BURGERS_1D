@@ -131,6 +131,12 @@ program master_assim
 
  xin6(:) = xin6(:) + xin5(:)
 !
+! Initial states in physical space
+!
+ call fft_i(xin6,u6_i)
+ call fft_i(xin5,u5_i)
+ call fft_i(xint,ut_i) 
+!
 ! Call model for final trajectory
 !
  call burgers(xin6,xout6,npdt0)
@@ -139,8 +145,12 @@ program master_assim
 ! 
  call fft_i(xout6,u6_f)
 ! 
-! Subsequent 24-h predictions after 24-h 
+! Need to recover output from background state: xout5 - overwritten in DA process
 !
+ call fft_d(u5_f,xout5)  
+! 
+! Subsequent 24-h predictions after 24-h 
+! 
  call burgers(xout6,xout7,npdt0) ! initial state from 4D-Var assimilation
  call burgers(xoutt,xout8,npdt0) ! true initial state
  call burgers(xout5,xout9,npdt0) ! initial state from background field
@@ -156,6 +166,7 @@ program master_assim
    xv = 2.0*pi*(float(ii)-1.0)/float(nlon)*a/1.E3 ! horizontal coordinate in km
    write (170,*) xv,u5_f(i),ut_f(i),u6_f(i)
    write (171,*) xv,u9_f(i),u8_f(i),u7_f(i)
+   write (172,*) xv,u5_i(i),ut_i(i),u6_i(i)
  enddo 
 
 ! Deallocate arrays  
