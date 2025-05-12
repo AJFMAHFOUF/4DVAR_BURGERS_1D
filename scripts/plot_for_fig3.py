@@ -29,7 +29,7 @@ ax2.set_title('Gradient of J')
 ax2.set_xlabel('Iterations')
 ax2.set_ylabel('Norm of gradient')
 figure = plt.gcf()
-figure.set_size_inches(12, 7)
+figure.set_size_inches(10, 5)
 plt.savefig('../plots/Figure_JG.png',dpi=600)
 plt.show()
 
