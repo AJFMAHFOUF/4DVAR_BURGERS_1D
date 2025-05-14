@@ -37,10 +37,10 @@ subroutine congrad(chi,gradientm,xin55,d0)
  
  implicit none
  
- complex, dimension(-mm:mm), intent(inout)     :: chi       ! control vector in spectral space
- complex, dimension(-mm:mm), intent(inout)     :: gradientm ! gradient of cost-function
- complex, dimension(-mm:mm,nslots), intent(in) :: xin55     ! initial conditions for each time slot
- complex, dimension(-mm:mm,nslots), intent(in) :: d0        ! innovation vector
+ complex, dimension(-mm:mm), intent(inout)       :: chi       ! control vector in spectral space
+ complex, dimension(-mm:mm), intent(inout)       :: gradientm ! gradient of cost-function
+ complex, dimension(-mm:mm,nslots), intent(in)   :: xin55     ! initial conditions for each time slot
+ complex, dimension(-mm:mm,0:nslots), intent(in) :: d0        ! innovation vector
  
  integer    :: islot  ! current time slot
  
@@ -51,7 +51,7 @@ subroutine congrad(chi,gradientm,xin55,d0)
  complex, dimension(-mm:mm) :: dk, dkm, zdkt  ! for descent directions
  complex, dimension(-mm:mm) :: zvar           ! temporary variable
  
- real, dimension(nobs,nslots) :: yo_save
+ real, dimension(nobs,0:nslots) :: yo_save
  
  real, dimension(nobs) :: yo5
  
@@ -81,6 +81,9 @@ subroutine congrad(chi,gradientm,xin55,d0)
    
    call chavarin(dk,zvar)
    
+   call hopt_tl(xin55(:,1),zvar,yo5,yo_save(:,0))           
+   yo_save(:,0) = yo_save(:,0)/sigmao**2   
+   
    do islot=1,nslots  
      call burgers_tl(xin55(:,islot),zvar,xout5,xout,npdt)
      call hopt_tl(xout5,xout,yo5,yo_save(:,islot))
@@ -97,6 +100,9 @@ subroutine congrad(chi,gradientm,xin55,d0)
      call burgers_ad(xin55(:,islot),xout,xout5,xin,npdt)
      xadd(:) = xout(:)  
    enddo
+   
+   call hopt_ad(xin55(:,1),xin,yo5,yo_save(:,0))
+   xout(:) = xout(:) + xin(:)   
    
    call chavarin_ad(zdkt,xout)
 

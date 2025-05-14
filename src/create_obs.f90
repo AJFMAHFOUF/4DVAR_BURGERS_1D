@@ -21,19 +21,19 @@ subroutine create_obs(xin5,yo5,l_obspert)
  
  implicit none
  
- complex, dimension(-mm:mm), intent(in)    :: xin5
- logical, intent(in)                       :: l_obspert
- real, dimension(nobs,nslots), intent(out) :: yo5
+ complex, dimension(-mm:mm), intent(in)      :: xin5
+ logical, intent(in)                         :: l_obspert
+ real, dimension(nobs,0:nslots), intent(out) :: yo5
  
  integer :: islot, ii
  
  complex, dimension(-mm:mm)   :: xout5, zvar
- real, dimension(nobs,nslots) :: eta_o
+ real, dimension(nobs,0:nslots) :: eta_o
  
  zvar(:) = xin5(:)
  
  if (l_obspert) then
-   do islot=1,nslots
+   do islot=0,nslots
      do ii=1,nobs
        call gasdev(eta_o(ii,islot))
        eta_o(ii,islot) = eta_o(ii,islot)*sigmao 
@@ -41,9 +41,12 @@ subroutine create_obs(xin5,yo5,l_obspert)
    enddo
  endif
  
- read (200,*) eta_o
+ if (l_obspert) write (210,*) eta_o
 
 ! The above random array can be saved for reproductibility of the results 
+ 
+ call hopt(xin5,yo5(:,0))
+ if (l_obspert) yo5(:,0) = yo5(:,0) + eta_o(:,0)
  
  do islot=1,nslots
    call burgers(zvar,xout5,npdt)
@@ -52,7 +55,7 @@ subroutine create_obs(xin5,yo5,l_obspert)
    zvar(:) = xout5(:)
  enddo 
  
- close(200)
+ close(210)
 
 return
 end subroutine create_obs

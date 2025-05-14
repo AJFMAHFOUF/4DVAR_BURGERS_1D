@@ -47,10 +47,10 @@ program master_assim
  
 ! Allocate arrays depending upon number of observations and time-slots 
  
- allocate (yo5(nobs,nslots))
- allocate (yot(nobs,nslots))
- allocate (d0(nobs,nslots))
- allocate (d0s(nobs,nslots))
+ allocate (yo5(nobs,0:nslots))
+ allocate (yot(nobs,0:nslots))
+ allocate (d0(nobs,0:nslots))
+ allocate (d0s(nobs,0:nslots))
  allocate (xin55(-mm:mm,nslots))
 !
 ! Index "t" is the truth and index "5" is the background 
@@ -59,7 +59,6 @@ program master_assim
  xin5(:) = u5_m(:)
  
  npdt0 = int(nlength/dt) - 1  
- print *,'npdt0=',npdt0,nlength
 !
 ! Call model for initial and true trajectories (over the whole assimilation window)
 !
@@ -105,6 +104,11 @@ program master_assim
    call burgers_ad(xin55(:,islot),xout,xout5,xin,npdt)
    xadd(:) = xout(:)
  enddo 
+ 
+ d0(:,0) = yot(:,0) - yo5(:,0)      ! innovation vector
+ d0s(:,0) = d0(:,0)/sigmao**2       ! scaled innovation
+ call hopt_ad(xin55(:,1),xin,yo5(:,0),d0s(:,0))
+ xout(:) = xout(:) + xin(:) 
  
  call chavarin_ad(gradientm,xout)
  

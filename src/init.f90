@@ -58,7 +58,7 @@ subroutine init
 !
 ! Temporal frequency of observations (s)
 !
- nfreq = 3*3600 
+ nfreq = 12*3600 
 !
 ! Number of time steps over a time slot
 ! 
