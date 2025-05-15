@@ -58,7 +58,7 @@ subroutine init
 !
 ! Temporal frequency of observations (s)
 !
- nfreq = 3*3600 
+ nfreq = 24*3600 
 !
 ! Number of time steps over a time slot
 ! 
@@ -109,11 +109,11 @@ subroutine init
    eta_m(m) = eta_m(m)*sqrt(c1*correl(m))
  enddo
  
- u5_m(:) = ut_m(:) + eta_m(:)  
+ u5_m(:,1) = ut_m(:) + eta_m(:)  
  
 ! Read perturbed state with random numbers for reproductibility 
  
- read (101,*) u5_m(:)
+ read (101,*) u5_m(:,1)
  
  return
  

@@ -56,7 +56,7 @@ program master_assim
 ! Index "t" is the truth and index "5" is the background 
 ! 
  xint(:) = ut_m(:)
- xin5(:) = u5_m(:)
+ xin5(:) = u5_m(:,1)
  
  npdt0 = int(nlength/dt) - 1  
  print *,'npdt0=',npdt0,nlength

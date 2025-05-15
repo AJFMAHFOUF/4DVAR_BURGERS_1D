@@ -7,8 +7,8 @@ module mod_vars
  
  real, dimension (nlon) :: u_i, u_f, u, u2     ! storage of prognostic variable in physical space 
  
- complex, dimension(-mm:mm)   :: u_m           ! Prognostic variable in spectral space 
- complex, dimension(-mm:mm)   :: u2_m
+ complex, dimension(-mm:mm,3)   :: u_m           ! Prognostic variable in spectral space 
+ complex, dimension(-mm:mm)     :: u2_m
   
  real, dimension(nlon) :: u5_i, u5_f, u5, u25  ! storage of prognostic variable in physical space (Trajectory)
  real, dimension(nlon) :: u6_i, u6_f
@@ -17,8 +17,8 @@ module mod_vars
  real, dimension(nlon)      :: ut_i, ut_f      ! True model state in physical space
  complex, dimension(-mm:mm) :: ut_m            ! True model state in spectral space
  
- complex, dimension(-mm:mm) :: u5_m            ! Prognostic variable in spectral space (Trajectory)
- complex, dimension(-mm:mm) :: u25_m
+ complex, dimension(-mm:mm,3) :: u5_m            ! Prognostic variable in spectral space (Trajectory)
+ complex, dimension(-mm:mm)   :: u25_m
  
  real, dimension(nlon) :: sigmab               ! standard deviation of background errors
  
