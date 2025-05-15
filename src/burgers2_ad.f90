@@ -93,7 +93,6 @@ subroutine burgers_ad(xin5,xin,xout5,xout,npdt1)
    
      do m=-mm,mm
        ztend_u5 = -j*float(m)*u25_m(m)/a  
-       ztend_u5 = -j*float(m)*20.0*u5_m(m,1)/a
        u5_m(m,2) = (u5_m(m,1) + dt*ztend_u5)/(1.0 + dt*(float(m)/a)**2*kdiff)
      enddo  
        
