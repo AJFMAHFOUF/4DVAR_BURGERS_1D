@@ -1,4 +1,4 @@
-subroutine congrad(chi,gradientm,xin55,d0)
+subroutine congrad(chi,gradientm,xin5,d0,islot)
 !-----------------------------------------------------------------------------------------
 ! Conjugate gradient minimisation algorithm (spectral space)
 ! suitable for a quadratic cost-function J (e.g. incremental 4D-Var)
@@ -16,9 +16,9 @@ subroutine congrad(chi,gradientm,xin55,d0)
 ! - chi           : control vector in transformed space (chi = Ldx 
 !                   where L is the square-root of B^{-1})
 ! - gradientm     : initial gradient of the cost-function
-! - xin55         : initial conditions for each timeslot over the assimilation window
+! - xin5          : initial conditions for current time step
 ! - d0            : innovation vector = difference between simulated and 
-!                   real observations for each timeslot
+!                   real observations for current timeslot
 !
 ! Outputs:
 ! - chi           : control vector at the end of the minimisation (analysis state)
@@ -39,21 +39,18 @@ subroutine congrad(chi,gradientm,xin55,d0)
  
  complex, dimension(-mm:mm), intent(inout)       :: chi       ! control vector in spectral space
  complex, dimension(-mm:mm), intent(inout)       :: gradientm ! gradient of cost-function
- complex, dimension(-mm:mm,nslots), intent(in)   :: xin55     ! initial conditions for each time slot
- complex, dimension(-mm:mm,0:nslots), intent(in) :: d0        ! innovation vector
- 
- integer    :: islot  ! current time slot
+ complex, dimension(-mm:mm), intent(in)          :: xin5      ! initial conditions for current time slot
+ complex, dimension(-mm:mm), intent(in)          :: d0        ! innovation vector
+ integer                   , intent(in)          :: islot     ! current time slot
  
  complex, dimension(-mm:mm) :: xin,  xout     ! prognostic variable (input/output)
- complex, dimension(-mm:mm) :: xin5, xout5    ! prognostic variable (input/output) - initial trajectory
+ complex, dimension(-mm:mm) :: xout5          ! prognostic variable (output) - initial trajectory
  complex, dimension(-mm:mm) :: xadd
  complex, dimension(-mm:mm) :: gradient       ! gradient of cost-function is spectral space
  complex, dimension(-mm:mm) :: dk, dkm, zdkt  ! for descent directions
  complex, dimension(-mm:mm) :: zvar           ! temporary variable
  
- real, dimension(nobs,0:nslots) :: yo_save
- 
- real, dimension(nobs) :: yo5
+ real, dimension(nobs)      :: yo_save, yo5
  
  real :: zsum, xj, xjb, xjo, alphak, betak, zgr1, zgr2
  
@@ -65,8 +62,6 @@ subroutine congrad(chi,gradientm,xin55,d0)
 !
 ! Initial conditions at the beginning of the assimilation window
 ! 
- xin5(:) = xin55(:,1)
- 
  call cost_function(chi,d0,xin5,xj,xjo,xjb)
 !
 ! Start minimisation algorithm - conjugate gradient descent method
@@ -81,28 +76,14 @@ subroutine congrad(chi,gradientm,xin55,d0)
    
    call chavarin(dk,zvar)
    
-   call hopt_tl(xin55(:,1),zvar,yo5,yo_save(:,0))           
-   yo_save(:,0) = yo_save(:,0)/sigmao**2   
-   
-   do islot=1,nslots  
-     call burgers_tl(xin55(:,islot),zvar,xout5,xout,npdt)
-     call hopt_tl(xout5,xout,yo5,yo_save(:,islot))
-     zvar(:) = xout(:)             
-     yo_save(:,islot) = yo_save(:,islot)/sigmao**2   
-   enddo
+   call hopt_tl(xin5,zvar,yo5,yo_save) 
+             
+   yo_save(:) = yo_save(:)/sigmao**2   
    
    xin(:) = (0.0,0.0)
    xadd(:) = (0.0,0.0)
-     
-   do islot=nslots,1,-1     
-     call hopt_ad(xin55(:,islot),xin,yo5,yo_save(:,islot))
-     xin(:) = xin(:) + xadd(:) 
-     call burgers_ad(xin55(:,islot),xout,xout5,xin,npdt)
-     xadd(:) = xout(:)  
-   enddo
    
-   call hopt_ad(xin55(:,1),xin,yo5,yo_save(:,0))
-   xout(:) = xout(:) + xin(:)   
+   call hopt_ad(xin5,xout,yo5,yo_save(:))
    
    call chavarin_ad(zdkt,xout)
 
@@ -136,7 +117,7 @@ subroutine congrad(chi,gradientm,xin55,d0)
   
    call cost_function(chi,d0,xin5,xj,xjo,xjb)  
 
-   write (173,*) k,xj,zgr2
+   write (173,*) islot,k,xj,zgr2
  
  enddo 
  

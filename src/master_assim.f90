@@ -1,6 +1,6 @@
 program master_assim
 !--------------------------------------------------------------------------------------------
-! Main program to perform a 4D-Var incremental variational assimilation
+! Main program to perform a 3D-Var incremental variational assimilation
 ! with a 1D Burgers model in spectral space (advection-diffusion equation)
 !--------------------------------------------------------------------------------------------
 ! Simulated observations are taken from a reference state (with a spatial sampling)
@@ -34,8 +34,7 @@ program master_assim
  complex, dimension(-mm:mm) :: gradientm    ! gradient of cost-function is spectral space
  complex, dimension(-mm:mm) :: dkm          ! for descent direction
  
- complex, allocatable       :: xin55(:,:)
- real, allocatable          :: yo5(:,:), yot(:,:), d0(:,:), d0s(:,:)
+ real, allocatable          :: yo5(:), yot(:,:), d0(:), d0s(:)
  
  real :: xj, xjb, xjo, betak, zgr1, t1, t2, xv 
  
@@ -47,11 +46,10 @@ program master_assim
  
 ! Allocate arrays depending upon number of observations and time-slots 
  
- allocate (yo5(nobs,0:nslots))
+ allocate (yo5(nobs))
  allocate (yot(nobs,0:nslots))
- allocate (d0(nobs,0:nslots))
- allocate (d0s(nobs,0:nslots))
- allocate (xin55(-mm:mm,nslots))
+ allocate (d0(nobs))
+ allocate (d0s(nobs))
 !
 ! Index "t" is the truth and index "5" is the background 
 ! 
@@ -72,86 +70,62 @@ program master_assim
  
 ! Create the necessary observations 
  
- call create_obs(xin5,yo5,.false.)
  call create_obs(xint,yot,.true.)
- 
-! Save initial conditions of trajectory for the various time slots
- 
- xin55(:,1) = xin5(:)
- 
- do islot=1,nslots
-   call burgers(xin5,xout5,npdt)
-   xin5(:) = xout5(:)
-   if (islot /= nslots) xin55(:,islot+1) = xin5(:)
- enddo 
-!
-! Restore initial conditions 
-! 
- xin5(:) = xin55(:,1) 
 !
 ! Initial conditions for adjoint integrations
 ! 
  xin(:)  = (0.,0.)
  xadd(:) = (0.0,0.0)
+ 
+ do islot=0,nslots 
 ! 
 ! Compute the initial gradient  
 !
- do islot=nslots,1,-1  
-   d0(:,islot) = yot(:,islot) - yo5(:,islot)  ! innovation vector
-   d0s(:,islot) = d0(:,islot)/sigmao**2       ! scaled innovation
-   call hopt_ad(xin55(:,islot),xin,yo5(:,islot),d0s(:,islot))
-   xin(:) = xin(:) + xadd(:) 
-   call burgers_ad(xin55(:,islot),xout,xout5,xin,npdt)
-   xadd(:) = xout(:)
- enddo 
- 
- d0(:,0) = yot(:,0) - yo5(:,0)      ! innovation vector
- d0s(:,0) = d0(:,0)/sigmao**2       ! scaled innovation
- call hopt_ad(xin55(:,1),xin,yo5(:,0),d0s(:,0))
- xout(:) = xout(:) + xin(:) 
- 
- call chavarin_ad(gradientm,xout)
- 
- zgr1 = 0.0      
- do m=-mm,mm
-   zgr1 = zgr1 + conjg(gradientm(m))*gradientm(m) 
- enddo  
- 
- chi(:) = (0.,0.) 
- dkm(:) = (0.,0.)
- betak = 0.0
- 
- call cost_function(chi,d0,xin5,xj,xjo,xjb)
+   call hopt(xin5,yo5)
    
- write (173,*) 0,xj,zgr1 
+   d0(:) = yot(:,islot) - yo5(:)     ! innovation vector
+   d0s(:) = d0(:)/sigmao**2          ! scaled innovation
+   
+   call hopt_ad(xin5,xout,yo5,d0s)
+ 
+   call chavarin_ad(gradientm,xout)
+ 
+   zgr1 = 0.0      
+   do m=-mm,mm
+     zgr1 = zgr1 + conjg(gradientm(m))*gradientm(m) 
+   enddo  
+ 
+   chi(:) = (0.,0.) 
+   dkm(:) = (0.,0.)
+   betak = 0.0
+ 
+   call cost_function(chi,d0,xin5,xj,xjo,xjb)
+   
+   write (173,*) islot,0,xj,zgr1 
 !
 ! Minimisation algorithm - conjugate gradient descent method
 !  
- call congrad(chi,gradientm,xin55,d0)
+   call congrad(chi,gradientm,xin5,d0,islot)
 !
 ! From control vector to spectral space : dx = L^{-1}chi - final increment
 ! 
- call chavarin(chi,xin6)
+   call chavarin(chi,xin6)
 
- xin6(:) = xin6(:) + xin5(:)
+   xin6(:) = xin6(:) + xin5(:)
 !
-! Initial states in physical space
+! Call model for the next time slot
 !
- call fft_i(xin6,u6_i)
- call fft_i(xin5,u5_i)
- call fft_i(xint,ut_i) 
-!
-! Call model for final trajectory
-!
- call burgers(xin6,xout6,npdt0)
+   call burgers(xin6,xout6,npdt)
+!   
+! Resulting forecast = initial conditions for next time slot
+! 
+   xin5(:) = xout6(:)
+ 
+ enddo
 !
 ! Back in physical space
 ! 
  call fft_i(xout6,u6_f)
-! 
-! Need to recover output from background state: xout5 - overwritten in DA process
-!
- call fft_d(u5_f,xout5)  
 ! 
 ! Subsequent 24-h predictions after 24-h 
 ! 
@@ -179,10 +153,9 @@ program master_assim
  deallocate (yot)
  deallocate (d0)
  deallocate (d0s)
- deallocate (xin55)
  
  call cpu_time(time=t2)
  
- print *,'Total execution of 4D-Var assimilation',t2-t1
+ print *,'Total execution of 3D-Var assimilation',t2-t1
  
 end program master_assim

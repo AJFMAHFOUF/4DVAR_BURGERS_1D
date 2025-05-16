@@ -29,12 +29,12 @@ subroutine cost_function(chi,d0,xin5,xj,xjo,xjb)
  implicit none
  
  complex, dimension(-mm:mm), intent(in)     :: chi, xin5
- real, dimension(nobs,0:nslots), intent(in) :: d0
+ real, dimension(nobs),      intent(in)     :: d0
  real, intent(out)                          :: xj, xjo, xjb
  
  complex, dimension(-mm:mm) :: zvar, zvar5, xout, xout5 
  real, dimension(nobs)      :: yo5, hdx
- integer :: m, islot, ii
+ integer :: m, ii
 
  xjb = 0.0
  do m=-mm,mm
@@ -52,18 +52,9 @@ subroutine cost_function(chi,d0,xin5,xj,xjo,xjb)
  
  call hopt_tl(zvar5,zvar,yo5,hdx) 
  do ii=1,nobs
-   xjo = xjo + ((hdx(ii) - d0(ii,0))/sigmao)**2
+   xjo = xjo + ((hdx(ii) - d0(ii))/sigmao)**2
  enddo 
  
- do islot=1,nslots
-   call burgers_tl(zvar5,zvar,xout5,xout,npdt)
-   call hopt_tl(xout5,xout,yo5,hdx)
-   zvar5(:) = xout5(:) 
-   zvar(:)  = xout(:)
-   do ii=1,nobs
-     xjo = xjo + ((hdx(ii) - d0(ii,islot))/sigmao)**2
-   enddo
- enddo  
  xjo = 0.5*xjo
  
  xj = xjo + xjb 
