@@ -41,7 +41,7 @@ subroutine create_obs(xin5,yo5,l_obspert)
    enddo
  endif
  
- if (l_obspert) write (210,*) eta_o
+ if (l_obspert) read (211,*) eta_o
 
 ! The above random array can be saved for reproductibility of the results 
  
@@ -55,7 +55,7 @@ subroutine create_obs(xin5,yo5,l_obspert)
    zvar(:) = xout5(:)
  enddo 
  
- close(210)
+ close(211)
 
 return
 end subroutine create_obs
